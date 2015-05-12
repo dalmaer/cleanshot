@@ -14,22 +14,24 @@ var async = require('async');
 var uploadsDirectory = process.argv[2] || UPLOADS_DIR; // TODO: optimist, allow for configurable screenshots dir too etc
 
 // For each file in the Camera Uploads directory move over the iOS Screenshots
-async.eachLimit(pngImagesInDir(uploadsDirectory), 20, moveIfScreenshot, function(err) {
+async.eachLimit(imagesInDir(uploadsDirectory), 20, moveIfScreenshot, function(err) {
   if (err) {
     console.log("eachLimit ERROR: ", err);
   }
 });
 
 // Given a directory, return the .png images from within
-function pngImagesInDir(dir) {
+function imagesInDir(dir) {
   return fs.readdirSync(dir).filter(function(file) {
-    return endsWith(file, '.png');
+    return endsWith(file, '.png') || endsWith(file, '.jpg');
   });
 }
 
 // Given EXIF metadata, return if we think the associated image is an iOS Screenshot
 function isScreenshot(exifData) {
-  return exifData['image size'] == '640x1136';
+  return exifData['image size'] == '640x1136' || // iPhone 5 (4 inch)
+         exifData['image size'] == '750x1334' || // iPhone 6 (4.7 inch)
+         exifData['image size'] == '1242x2208';  // iPhone 6+ (5.5 inch)
 }
 
 // Given a image filename (and a callback for eachLimit) proceed to move anything that is an iOS screenshot
